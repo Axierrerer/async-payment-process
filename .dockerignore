@@ -1,0 +1,50 @@
+# ---------- Git и CI ----------
+.git
+.gitignore
+.gitlab-ci.yml
+.github
+
+# ---------- Секреты ----------
+**/.env
+**/.env.*
+
+# ---------- Виртуальные окружения ----------
+**/.venv
+**/venv
+
+# ---------- Байткод и кеши ----------
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/.coverage
+**/.coverage.*
+**/htmlcov
+
+# ---------- Артефакты сборки ----------
+**/build
+**/dist
+**/*.egg-info
+
+# ---------- Тесты ----------
+**/tests
+
+# ---------- Docker ----------
+**/Dockerfile
+**/Dockerfile.*
+**/docker-compose*.yml
+**/compose*.yml
+**/.dockerignore
+
+# ---------- IDE и ОС ----------
+**/.idea
+**/.vscode
+**/*.code-workspace
+**/.DS_Store
+**/Thumbs.db
+
+# ---------- Документация и логи ----------
+**/*.md
+!**/README.md
+**/*.log

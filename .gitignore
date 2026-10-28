@@ -1,0 +1,41 @@
+# ---------- Переменные окружения ----------
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# ---------- Виртуальные окружения ----------
+.venv/
+venv/
+env/
+
+# ---------- Байткод Python ----------
+__pycache__/
+*.py[cod]
+
+# ---------- Кеши инструментов ----------
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# ---------- Сборка пакетов ----------
+build/
+dist/
+*.egg-info/
+
+# ---------- IDE ----------
+.idea/
+.vscode/
+*.code-workspace
+
+# ---------- ОС ----------
+.DS_Store
+Thumbs.db
+
+# ---------- Логи ----------
+*.log
