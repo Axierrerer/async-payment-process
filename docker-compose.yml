@@ -1,0 +1,110 @@
+name: async-payment-process
+
+x-app: &app
+  env_file:
+    - .env
+  environment:
+    APP_HOST: 0.0.0.0
+    POSTGRES_HOST: async-payment-process-db
+    POSTGRES_PORT: 5432
+    RABBITMQ_HOST: async-payment-process-rabbitmq
+    RABBITMQ_PORT: 5672
+  networks:
+    - async-payment-process-network
+
+services:
+  async-payment-process-db:
+    container_name: async-payment-process-db
+    image: postgres:17-alpine
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - async-payment-process-network
+
+  async-payment-process-rabbitmq:
+    container_name: async-payment-process-rabbitmq
+    hostname: async-payment-process-rabbitmq
+    image: rabbitmq:4-management-alpine
+    env_file:
+      - .env
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - async-payment-process-network
+
+  migrations:
+    <<: *app
+    image: async-payment-process:migrations
+    build:
+      context: .
+      target: migrations
+    command: ["alembic", "upgrade", "head"]
+    depends_on:
+      async-payment-process-db:
+        condition: service_healthy
+
+  api:
+    <<: *app
+    image: async-payment-process:api
+    build:
+      context: .
+      target: api
+    command: ["python", "src/main.py", "--uvicorn"]
+    ports:
+      - "${APP_PORT:-8000}:${APP_PORT:-8000}"
+    restart: unless-stopped
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+
+  outbox-relay:
+    <<: *app
+    image: async-payment-process:outbox-relay
+    build:
+      context: .
+      target: outbox-relay
+    command: ["python", "src/main.py", "--outbox-relay"]
+    restart: unless-stopped
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      async-payment-process-rabbitmq:
+        condition: service_healthy
+
+  consumer:
+    <<: *app
+    image: async-payment-process:consumer
+    build:
+      context: .
+      target: consumer
+    command: ["python", "src/main.py", "--consumer"]
+    restart: unless-stopped
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+      async-payment-process-rabbitmq:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  rabbitmq-data:
+
+networks:
+  async-payment-process-network:
